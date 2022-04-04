@@ -44,11 +44,11 @@ class Terminal:
                 currency = input("Ingresa la moneda que recibiras: ")
                 amount = input("Ingrese la cantidad que recibiras: ")
                 code = input("Ingrese el codigo del remitente: ")
-                #try:
-                self.wallet.receive(currency, amount, code)
-                #except Exception as e:
-                    # print("****Error****")
-                    # print(str(e))
+                try:
+                    self.wallet.receive(currency, amount, code)
+                except Exception as e:
+                    print("****Error****")
+                    print(str(e))
             elif (option == "2"):
                 print("Escogiste transferir monto.")
                 currency = input("Ingresa la moneda en que transferiras: ")

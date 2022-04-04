@@ -62,9 +62,10 @@ class EWalltet():
         }
         response = self.session.get(self.url, params=parameters).json()
         status = response['status']
-        pprint.pprint(response)
-        if (status['error_code'] > 0):
-            print("AQUI ESTOY")
+        #pprint.pprint(response)
+        if (status['error_code'] == 400):
+            raise Exception("La moneda \"",currency,"\" no existe dentro del catalogo de Coin Market")
+        elif (status['error_code'] > 0):
             print("****ERROR****")
             raise Exception(status['error_message'])
 
