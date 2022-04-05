@@ -64,7 +64,7 @@ class EWalltet():
         status = response['status']
         #pprint.pprint(response)
         if (status['error_code'] == 400):
-            raise Exception("La moneda \"",currency,"\" no existe dentro del catalogo de Coin Market")
+            raise Exception("LA MONEDA ",currency," NO EXISTE DENTRO DEL CATALOGO DE COIN MARKET")
         elif (status['error_code'] > 0):
             print("****ERROR****")
             raise Exception(status['error_message'])
