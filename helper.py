@@ -16,3 +16,4 @@ class printableLen:
     SYMBOL= 10
     AMOUNT= 25
     DATE= 10
+    HEADERLEN = (DATE + TYPE + (AMOUNT * 3) + 5)

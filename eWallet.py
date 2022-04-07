@@ -3,15 +3,18 @@ from datetime import date
 import json
 from requests import Request, Session
 import pprint
+from pathlib import Path
 
 class DataFileManager():
     """Class to manage write and read operations in the file."""
 
     def __init__(self, path):
         self.path = path
+        fle = Path(path)
+        fle.touch(exist_ok=True)
 
     def load(self):
-        self.file = open(self.path, "r")
+        self.file = open(self.path, "r+")
         line = self.file.readline()
         while line:
             print(line)
@@ -19,20 +22,33 @@ class DataFileManager():
         self.file.close()
 
     def writeTransaction(self, transaction):
-        with open(self.path, "a") as outfile:
+        with open(self.path, "a+") as outfile:
              outfile.write(json.dumps(transaction) + "\n")
 
-    def getCryptoTransactionsFromUser(self, user, cryptoSymbol):
+    def getCryptoTransactionsFromUser(self, user, cryptoSymbol = None):
         transactions = []
-        with open(self.path, "r") as f:
+        with open(self.path, "r+") as f:
             for line in f:
                 #print(line)
                 transaction = json.loads(line)
-                if(transaction['user'] == user and transaction['currency'] ==  cryptoSymbol):
-                    print(line)
-                    transactions.append(transaction)
+                if(transaction['user'] == user):
+                    #print(line)
+                    if(cryptoSymbol is None):
+                        transactions.append(transaction)
+                    elif (transaction['currency'] ==  cryptoSymbol):
+                        transactions.append(transaction)
         return tuple(transactions)
 
+    def getCurrenciesUsedByUser(self, user):
+        currenciesList = []
+        with open(self.path, "r+") as f:
+            for line in f:
+                #print(line)
+                transaction = json.loads(line)
+                if(transaction['user'] == user):
+                    if(transaction['currency'] not in currenciesList):
+                        currenciesList.append(transaction['currency'])
+        return currenciesList
 
 class EWalltet():
     """Electronic Wallet Class"""
@@ -75,8 +91,8 @@ class EWalltet():
             'name'  : response['data'][key]['name'],
             'price' : response['data'][key]['quote']['USD']['price']
         }
-        print("salio de get crypto")
-        print(self.crypto)
+        #print("salio de get crypto")
+        #print(self.crypto)
         return self.crypto
 
     def isUserDefined(self):
@@ -98,17 +114,17 @@ class EWalltet():
         print("------------------------------------")
         str = "\tSe registró la transacción: \n"
         if(transaction["type"] == SEND):
-            str += "->Tipo: recepción de dinero.\n"
-            str += "->Cuenta receptora: "+transaction["user"]+"\n"
-        else:
             str += "->Tipo: envio de dinero.\n"
             str += "->Cuenta remitente: "+transaction["user"]+"\n"
+        else:
+            str += "->Tipo: recepción de dinero.\n"
+            str += "->Cuenta receptora: "+transaction["user"]+"\n"
         str += "->Moneda: "+transaction["currency"]+"\n"
         str += "->Cantidad: "+transaction["amount"]+"\n"
         if(transaction["type"] == SEND):
-            str += "->Cuenta remitente: "+transaction["codeToAffect"]+"\n"
-        else:
             str += "->Cuenta receptora: "+transaction["codeToAffect"]+"\n"
+        else:
+            str += "->Cuenta remitente: "+transaction["codeToAffect"]+"\n"
         str += "->Fecha: "+transaction["date"]+"\n"
         print(str)
         print("------------------------------------")
@@ -123,7 +139,7 @@ class EWalltet():
         self.fileManager.writeTransaction(receiveTransaction)
         self.fileManager.writeTransaction(sendTransaction)
         print("****TRANSACCIÓN REGISTRADA EXITOSAMENTE.****")
-        self.printTransaction(transaction)
+        self.printTransaction(receiveTransaction)
 
     def send(self,currency, amount, code):
         crypto = self.getCryptoData(currency)
@@ -134,7 +150,7 @@ class EWalltet():
         self.fileManager.writeTransaction(receiveTransaction)
         self.fileManager.writeTransaction(sendTransaction)
         print("****TRANSACCIÓN REGISTRADA EXITOSAMENTE.****")
-        self.printTransaction(transaction)
+        self.printTransaction(sendTransaction)
 
     def printBalance(self, currency):
         crypto = self.getCryptoData(currency)
@@ -144,10 +160,82 @@ class EWalltet():
         else:
             self.printBalanceOfTransactions(transactions, crypto)
 
+    def printGeneralBalance(self):
+        curreciesRegisteredInUserList = self.fileManager.getCurrenciesUsedByUser(self.user)
+        if(len(curreciesRegisteredInUserList) == 0):
+            print("\tNO TIENES TRANSACCIONES REGISTRADAS")
+        else:
+            self.printElementsInCurreciesList(curreciesRegisteredInUserList)
+
+    def printElementsInCurreciesList(self, currenciesList):
+        cryptoValuesDict = {}
+        self.printHeaderOfGBReport("BALANCE GENERAL DE TRANSACCIÓNES")
+        for elem in currenciesList:
+            transactions = self.fileManager.getCryptoTransactionsFromUser(self.user, elem)
+            self.printGeneralBalanceOfTransactions(transactions, elem, cryptoValuesDict)
+        self.printBalanceOfCurrenciesDetailed(cryptoValuesDict)
+
+    def printHeaderOfGBReport(self, reportName):
+        print(printableLen.HEADERLEN)
+        print(self.stringBuilder(printableLen.HEADERLEN,"", "*"))
+        print(self.stringBuilder(printableLen.HEADERLEN,reportName, "*"))
+
+        today = date.today()
+        caracter = '-'
+        header = ""
+        header += "Usuario: "+ self.stringBuilder(printableLen.CODE, self.user) +"|"
+        header += "Fecha: " + self.stringBuilder(printableLen.DATE, today.strftime("%d/%m/%Y"))+"|"
+        #print(header)
+        print(caracter*printableLen.HEADERLEN)
+        header = ""
+        header += self.stringBuilder(printableLen.DATE, "Fecha") + "|"
+        header += self.stringBuilder(printableLen.TYPE, "Tipo") + "|"
+        header += self.stringBuilder(printableLen.AMOUNT, "Debitos") + "|"
+        header += self.stringBuilder(printableLen.AMOUNT, "Creditos") + "|"
+        header += self.stringBuilder(printableLen.AMOUNT, "Saldo") + "|"
+        print(header)
+        print(caracter*printableLen.HEADERLEN)
+
+    def printGeneralBalanceOfTransactions(self, transactions, currency, cryptoValuesDict):
+        print(self.stringBuilder(printableLen.HEADERLEN, currency,"-"))
+
+        for transaction in transactions:
+            self.printTransactionInBalanceFormat(transaction, cryptoValuesDict)
+
+
+    def printBalanceOfCurrenciesDetailed(self, cryptoValuesDict):
+        print(self.stringBuilder(printableLen.HEADERLEN,"DETALLE DE SALDOS POR DIVISA", "*"))
+        header = ""
+        header += self.stringBuilder(printableLen.CODE, "Divisa") + "|"
+        header += self.stringBuilder(printableLen.AMOUNT, "Precio") + "|"
+        header += self.stringBuilder(printableLen.AMOUNT, "Saldo") + "|"
+        header += self.stringBuilder(printableLen.AMOUNT, "Saldo en USD") + "|"
+        print(header)
+        caracter = '-'
+        print(caracter*printableLen.HEADERLEN)
+        totalValue =0.0
+        for key, value in cryptoValuesDict.items():
+            header = ""
+            crypto = self.getCryptoData(key)
+            header += self.stringBuilder(printableLen.CODE,crypto["name"] ) + "|"
+            header += self.stringBuilder(printableLen.AMOUNT,str(crypto['price'])) + "|"
+            header += self.stringBuilder(printableLen.AMOUNT, str(value)) + "|"
+            balanceInUSA = self.getBalanceInUSA(value, crypto['price'])
+            header += self.stringBuilder(printableLen.AMOUNT, str(balanceInUSA)) + "|"
+            totalValue += balanceInUSA
+            print(header)
+
+        print("\n\nTu saldo en dólares americanos es: $"+str(totalValue))
+        print(caracter*printableLen.HEADERLEN)
+
+
+    def getBalanceInUSA(self, value, price):
+        return value * price
+
+
     def printBalanceOfTransactions(self,transactions, crypto):
-        headerLen = (printableLen.DATE + printableLen.TYPE + (printableLen.AMOUNT * 3) + 5)
-        print(headerLen)
-        print(self.stringBuilder(headerLen,"BALANCE DE TRANSACCIÓNES", "*"))
+        print(printableLen.HEADERLEN)
+        print(self.stringBuilder(printableLen.HEADERLEN,"BALANCE DE TRANSACCIÓNES", "*"))
         today = date.today()
         caracter = '-'
         header = ""
@@ -156,7 +244,7 @@ class EWalltet():
         header += "Divisa: " + self.stringBuilder(printableLen.CODE, crypto['name']) + "|"
         header += "Precio: " + self.stringBuilder(printableLen.AMOUNT, '$' + str(crypto['price'])," ", False)
         print(header)
-        print(caracter*headerLen)
+        print(caracter*printableLen.HEADERLEN)
         header = ""
         header += self.stringBuilder(printableLen.DATE, "Fecha") + "|"
         header += self.stringBuilder(printableLen.TYPE, "Tipo") + "|"
@@ -164,24 +252,23 @@ class EWalltet():
         header += self.stringBuilder(printableLen.AMOUNT, "Creditos") + "|"
         header += self.stringBuilder(printableLen.AMOUNT, "Saldo") + "|"
         print(header)
-        print(caracter*headerLen)
+        print(caracter*printableLen.HEADERLEN)
 
-        cryptoValuesDict = {
-            crypto['symbol'] : 0.0
-        }
+        cryptoValuesDict = {}
 
         for transaction in transactions:
-            cryptoValuesDict = self.printTransactionInBalanceFormat(transaction, cryptoValuesDict)
+             self.printTransactionInBalanceFormat(transaction, cryptoValuesDict)
 
         totalValue = cryptoValuesDict[crypto['symbol']]
-        print("Tu saldo en dólares americanos es de : $" + str(totalValue*crypto['price']))
+        print("Tu saldo en dólares americanos es de : $" + str(self.getBalanceInUSA(totalValue,crypto['price'])))
+        print(caracter*printableLen.HEADERLEN)
 
     def printTransactionInBalanceFormat(self, transaction, cryptoValuesDict):
         strPrinteable = self.stringBuilder(printableLen.DATE, transaction['date']) + "|"
         value = float(transaction['amount'])
         balance = 0.0
         if(transaction['type'] == SEND):
-            strPrinteable += self.stringBuilder(printableLen.TYPE, "TRANSFERENIA") + "|"
+            strPrinteable += self.stringBuilder(printableLen.TYPE, "TRANSFERENCIA") + "|"
             strPrinteable += self.stringBuilder(printableLen.AMOUNT, str(value)) + "|"
             strPrinteable += self.stringBuilder(printableLen.AMOUNT, " ") + "|"
             balance -= value
@@ -191,10 +278,13 @@ class EWalltet():
             strPrinteable += self.stringBuilder(printableLen.AMOUNT, str(value)) + "|"
             balance += value
 
-        cryptoValuesDict[transaction['currency']] += balance
+        if transaction['currency'] not in cryptoValuesDict:
+            cryptoValuesDict[transaction['currency']] = balance
+        else:
+            cryptoValuesDict[transaction['currency']] += balance
+
         strPrinteable += self.stringBuilder(printableLen.AMOUNT, str(cryptoValuesDict[transaction['currency']])) + "|"
         print(strPrinteable)
-        return cryptoValuesDict
 
 
     def stringBuilder(self, amount, str, caracter = " ", centerContext = True):
