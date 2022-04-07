@@ -22,6 +22,7 @@ class Terminal:
                 print("Adios.")
                 self.exit = True
 
+    """Bucle con condicinal para salida con la palabra "salir" """
     def start(self):
         while not self.exit:
             self.Login()
@@ -37,7 +38,7 @@ class Terminal:
                 option = input("Indique un número: ")
                 self.validOptions(option)
 
-
+    """Validor de opcion, ejecuta la transaccion a realizar de la classe EWallet"""
     def validOptions(self, option):
         if(isNumber(option)):
             if(option == "1"):

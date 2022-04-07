@@ -10,6 +10,7 @@ class DataFileManager():
 
     def __init__(self, path):
         self.path = path
+        """Crea el archivo si no existe"""
         fle = Path(path)
         fle.touch(exist_ok=True)
 
@@ -25,6 +26,11 @@ class DataFileManager():
         with open(self.path, "a+") as outfile:
              outfile.write(json.dumps(transaction) + "\n")
 
+    """
+        Devuelve una tupla de todas las transacciones de un usuario especifico.
+        En caso de pasar argumento de moneda, devuelve solo las transacciones
+        con la moneda recibida en argumento.
+    """
     def getCryptoTransactionsFromUser(self, user, cryptoSymbol = None):
         transactions = []
         with open(self.path, "r+") as f:
@@ -39,6 +45,10 @@ class DataFileManager():
                         transactions.append(transaction)
         return tuple(transactions)
 
+    """
+        Devuelve una lista de las monedas usadas por un usuario
+        registradas en el archivo, "transactions.json"
+    """
     def getCurrenciesUsedByUser(self, user):
         currenciesList = []
         with open(self.path, "r+") as f:
@@ -71,6 +81,9 @@ class EWalltet():
     def getUser(self):
         return self.user
 
+    """Funcion que obtine el precio, nombre y datos generales de una Cryptomoneda, si tal existe
+        en el catalogo de Coin Market
+    """
     def getCryptoData(self, currency):
         parameters = {
         'symbol':  currency,
@@ -98,6 +111,15 @@ class EWalltet():
     def isUserDefined(self):
         return not self.user is None
 
+    """
+        Construye la transaccion en formato Json que se guardara en el archivo
+        args:
+            1. type: el tipo de transaccion
+            2. user: codigo del usuario principal de la transaccion
+            3. crypto: simbolo de la crypto moneda utilizada.
+            4. amount: cantidad de la transaccion
+            5. code: codigo(usuario) afectado de la transaccion.
+    """
     def buildTransaction(self, type,user, crypto, amount, code):
         today = date.today()
         if(not isFloat(amount)):
@@ -113,6 +135,13 @@ class EWalltet():
         }
         return transaction
 
+
+    """
+        Imprime la transaccion en formato vertical
+        Se utiliza despues escribir en el archivo
+        Para confirmar registro correcto despues de las llamadas
+        a las funciones "receive" y "send"
+    """
     def printTransaction(self, transaction):
         print("------------------------------------")
         str = "\tSe registró la transacción: \n"
@@ -132,6 +161,16 @@ class EWalltet():
         print(str)
         print("------------------------------------")
 
+    """
+        Funcion de recepcion de dinero.
+        Escribe dos transacciones en el archivo
+            1. transaccion de tipo RECEIVE, utiliza al usuario loggeado como 'user' principal en la transaccion.
+            2. transaccion de tipo DEBT, utiliza el usario que envio el dinero como el 'user' principal en la transaccion
+        argumentos:
+            currency: cryptomoneda usada.
+            amount: cantidad de la criptomoneda.
+            code: usuario que envia el dinero. (usuario afectado a restarle la cantidad de su billetera)(este usuario no ejecuta la transaccion)
+    """
     def receive(self, currency, amount, code):
         crypto = self.getCryptoData(currency)
         if(code == self.user):
@@ -144,6 +183,16 @@ class EWalltet():
         print("****TRANSACCIÓN REGISTRADA EXITOSAMENTE.****")
         self.printTransaction(receiveTransaction)
 
+    """
+        Funcion de envio de dinero.
+        Escribe dos transacciones en el archivo
+            1. transaccion de tipo SEND, utiliza al usuario loggeado como 'user' principal en la transaccion.
+            2. transaccion de tipo INCOME, utiliza el usario que recibe el dinero como el 'user' principal en la transaccion
+        argumentos:
+            currency: cryptomoneda usada.
+            amount: cantidad de la criptomoneda.
+            code: usuario que recibe el dinero. (usuario afectado a sumarle la cantidad a su billetera)(este usuario no ejecuta la transaccion)
+    """
     def send(self,currency, amount, code):
         crypto = self.getCryptoData(currency)
         if(code == self.user):
@@ -155,6 +204,9 @@ class EWalltet():
         print("****TRANSACCIÓN REGISTRADA EXITOSAMENTE.****")
         self.printTransaction(sendTransaction)
 
+    """Funcion de impresion de reporte
+        imprime en pantalla el estado de cuenta de una cryptomoneda pasada por argumento.
+    """
     def printBalance(self, currency):
         crypto = self.getCryptoData(currency)
         transactions = self.fileManager.getCryptoTransactionsFromUser(self.user, crypto['symbol'])
@@ -163,6 +215,10 @@ class EWalltet():
         else:
             self.printBalanceOfTransactions(transactions, crypto)
 
+    """Funcion de impresion de reporte Balance General
+        imprime en pantalla el estado de cuenta de todas las cryptomonedas de un usuario especifico.
+        La impresion de las crypto monedas es ordenada, independientemente del orden que se registraron las transacciones en el archivo.
+    """
     def printGeneralBalance(self):
         curreciesRegisteredInUserList = self.fileManager.getCurrenciesUsedByUser(self.user)
         if(len(curreciesRegisteredInUserList) == 0):
@@ -170,6 +226,9 @@ class EWalltet():
         else:
             self.printElementsInCurreciesList(curreciesRegisteredInUserList)
 
+    """
+        Funcion de impresion ordenada de las cryptomonedas encontradas en el archivo 'transactions.json'
+    """
     def printElementsInCurreciesList(self, currenciesList):
         cryptoValuesDict = {}
         self.printHeaderOfGBReport("BALANCE GENERAL DE TRANSACCIÓNES")
@@ -178,6 +237,9 @@ class EWalltet():
             self.printGeneralBalanceOfTransactions(transactions, elem, cryptoValuesDict)
         self.printBalanceOfCurrenciesDetailed(cryptoValuesDict)
 
+    """
+        Funcion de impresion del encabezado del reporte Balance General
+    """
     def printHeaderOfGBReport(self, reportName):
         #print(printableLen.HEADERLEN)
         print(self.stringBuilder(printableLen.HEADERLEN,reportName, "*"))
@@ -205,6 +267,12 @@ class EWalltet():
             self.printTransactionInBalanceFormat(transaction, cryptoValuesDict)
 
 
+    """
+        Funcion de impresion detallada en formato vertical para reporte de Balance General.
+        Args:
+            cryptoValuesDict: Diccionario que guarda como Key el symbolo de la moneda y
+                              como value el numero real(float) del saldo de dicha moneda.
+    """
     def printBalanceOfCurrenciesDetailed(self, cryptoValuesDict):
         print(self.stringBuilder(printableLen.HEADERLEN,"DETALLE DE SALDOS POR DIVISA", "*"))
         header = ""
@@ -234,7 +302,13 @@ class EWalltet():
     def getBalanceInUSA(self, value, price):
         return value * price
 
-
+    """
+        Funcion de impresion de encabezado y detalle de transacciones en formato vertical
+        para reporte de Balance de una moneda especifica.
+        args:
+            1.transactions: tupla de las transacciones a imprimir
+            2. crypto: de tipo json que contiene todo los valores generales(precio, nombre, symbolo) de la cryptomoneda que se esta imprimiendo
+    """
     def printBalanceOfTransactions(self,transactions, crypto):
         #print(printableLen.HEADERLEN)
         print(self.stringBuilder(printableLen.HEADERLEN,"BALANCE DE TRANSACCIÓNES", "*"))
@@ -265,6 +339,15 @@ class EWalltet():
         print("Tu saldo en dólares americanos es de : $" + str(self.getBalanceInUSA(totalValue,crypto['price'])))
         print(caracter*printableLen.HEADERLEN)
 
+    """
+        Funcion de impresion de detalle de transacciones en formato vertical
+        para reporte de Balance de una moneda especifica.
+        args:
+            1.transaction: Json de la transaccion a imprimir
+            2. cryptoValuesDict: Diccionario para el control de suma o resta del saldo de dicha cryptomoneda de la transaccion.
+                                Key -> (string)Symbolo de la cryptomoneda
+                                Value -> (float) saldo de la moneda
+    """
     def printTransactionInBalanceFormat(self, transaction, cryptoValuesDict):
         strPrinteable = self.stringBuilder(printableLen.DATE, transaction['date']) + "|"
         value = float(transaction['amount'])
@@ -289,6 +372,9 @@ class EWalltet():
         print(strPrinteable)
 
 
+    """
+        Funcion de impresion para el reporte Historico de Transacciones
+    """
     def printAllTransactions(self):
         transactions = self.fileManager.getCryptoTransactionsFromUser(self.user)
         if(len(transactions) == 0):
@@ -300,6 +386,10 @@ class EWalltet():
             caracter = "-"
             print(caracter*printableLen.HEADERLEN)
 
+
+    """
+        Funcion que imprime el encabezado del reporte Historico de Transacciones
+    """
     def printHeaderAllTransactions(self):
         print(self.stringBuilder(printableLen.HEADERLEN,"HISTORIAL DE TRANSACCIÓNES", "*"))
         today =  date.today()
@@ -317,6 +407,13 @@ class EWalltet():
         print(str)
         print(caracter*printableLen.HEADERLEN)
 
+    """
+        Funcion de impresion de las transacciones en formato horizontal para exposicion del usuario
+        en el reporte Historico de Transacciones
+        Comentario:
+            Las transacciones 'TRANSFERENCIA' y 'RECEPCION' son de primer orden, estas transacciones fueron ejecutadas por el usuario.
+            Las transacciones 'INGRESO' y 'EGRESO' son de segundo orden, estas transacciones afectan el saldo del usuario loggeado, por consecuancia de la ejecucion de otro usuario.
+    """
     def printTransactionsinUserFormat(self, transaction):
         str = self.stringBuilder(printableLen.DATE, transaction["date"]) + "|"
         str += self.stringBuilder(printableLen.SYMBOL, transaction["currency"]) + "|"
@@ -334,7 +431,14 @@ class EWalltet():
 
 
 
-
+    """
+        Funcion para la construccion de un string.
+        args:
+            1. amount: cantidad de desface que debe tener el texto.
+            2. str: texto a imprimir.
+            3. caracter: si el texto es menor a la cantidad que se pretende imprimir, este char se utilizara como relleno. Por default es espacio vacio.
+            4. centerContext: boolean que indica si la impresion del el texto a imprimir debe ir centrado, o debe empezar en el indice 0. 
+    """
     def stringBuilder(self, amount, str, caracter = " ", centerContext = True):
         strPrinteable = ""
         strLen = len(str)

@@ -2,3 +2,7 @@
 {"user": "carlos", "type": "D", "currency": "BTC", "amount": "2", "codeToAffect": "luis", "date": "07/04/2022"}
 {"user": "clau", "type": "I", "currency": "ETH", "amount": "5", "codeToAffect": "luis", "date": "07/04/2022"}
 {"user": "luis", "type": "S", "currency": "ETH", "amount": "5", "codeToAffect": "clau", "date": "07/04/2022"}
+{"user": "luis", "type": "R", "currency": "BTC", "amount": "5", "codeToAffect": "carlos", "date": "07/04/2022"}
+{"user": "carlos", "type": "D", "currency": "BTC", "amount": "5", "codeToAffect": "luis", "date": "07/04/2022"}
+{"user": "clau", "type": "I", "currency": "ETH", "amount": "5", "codeToAffect": "carlos", "date": "07/04/2022"}
+{"user": "carlos", "type": "S", "currency": "ETH", "amount": "5", "codeToAffect": "clau", "date": "07/04/2022"}

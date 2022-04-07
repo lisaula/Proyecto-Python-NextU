@@ -1,3 +1,6 @@
+"""
+    Funcion de validacion que valor pasado por argumento sea un numero entero.
+"""
 def isNumber(option):
     try:
         option = int(option)
@@ -5,6 +8,9 @@ def isNumber(option):
     except ValueError:
         return False
 
+"""
+    Funcion de validacion que valor pasado por argumento sea un numero real.
+"""
 def isFloat(option):
     try :
         option = float(option)
@@ -19,6 +25,9 @@ INCOME = 'I'
 DEBT = 'D'
 
 
+"""
+    Clase para control de margene de impresion. 
+"""
 class printableLen:
     CODE= 13
     TYPE= 13
