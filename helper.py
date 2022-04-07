@@ -5,9 +5,18 @@ def isNumber(option):
     except ValueError:
         return False
 
+def isFloat(option):
+    try :
+        option = float(option)
+        return True
+    except :
+        return False
+
 """Variables de control para escritura de transacciones"""
 SEND = 'S'
 RECEIVE = 'R'
+INCOME = 'I'
+DEBT = 'D'
 
 
 class printableLen:

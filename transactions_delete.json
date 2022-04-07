@@ -1,8 +1,0 @@
-{"user": "J", "type": "S", "currency": "BTC", "amount": "4", "codeToAffect": "dd", "date": "29/03/2022"}
-{"user": "J", "type": "S", "currency": "BTC", "amount": "5", "codeToAffect": "dd", "date": "29/03/2022"}
-{"user": "dd", "type": "R", "currency": "ETH", "amount": "4", "codeToAffect": "J", "date": "29/03/2022"}
-{"user": "dd", "type": "S", "currency": "ETH", "amount": "5", "codeToAffect": "J", "date": "29/03/2022"}
-{"user": "J", "type": "R", "currency": "ETH", "amount": "5", "codeToAffect": "dd", "date": "05/04/2022"}
-{"user": "dd", "type": "S", "currency": "ETH", "amount": "5", "codeToAffect": "J", "date": "05/04/2022"}
-{"user": "J", "type": "R", "currency": "ETH", "amount": "5", "codeToAffect": "dd", "date": "05/04/2022"}
-{"user": "dd", "type": "S", "currency": "ETH", "amount": "5", "codeToAffect": "J", "date": "05/04/2022"}

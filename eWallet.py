@@ -80,7 +80,7 @@ class EWalltet():
         status = response['status']
         #pprint.pprint(response)
         if (status['error_code'] == 400):
-            raise Exception("LA MONEDA ",currency," NO EXISTE DENTRO DEL CATALOGO DE COIN MARKET")
+            raise Exception("LA MONEDA \""+currency+"\" NO EXISTE DENTRO DEL CATALOGO DE COIN MARKET")
         elif (status['error_code'] > 0):
             print("****ERROR****")
             raise Exception(status['error_message'])
@@ -100,6 +100,9 @@ class EWalltet():
 
     def buildTransaction(self, type,user, crypto, amount, code):
         today = date.today()
+        if(not isFloat(amount)):
+            raise Exception("La cantidad ingresada \""+amount+"\" no es un valor numérico.")
+
         transaction = {
         "user" : user,
         "type" : type,
@@ -132,9 +135,9 @@ class EWalltet():
     def receive(self, currency, amount, code):
         crypto = self.getCryptoData(currency)
         if(code == self.user):
-            raise Exception("El codigo del remitente +\""+code+"\" no puede ser igual a tu codigo: "+self.user+".")
+            raise Exception("El codigo del remitente \""+code+"\" no puede ser igual a tu codigo: "+self.user+".")
         receiveTransaction = self.buildTransaction(RECEIVE,self.user,crypto, amount, code)
-        sendTransaction =    self.buildTransaction(SEND, code, crypto, amount, self.user)
+        sendTransaction =    self.buildTransaction(DEBT, code, crypto, amount, self.user)
         print("despues de construir")
         self.fileManager.writeTransaction(receiveTransaction)
         self.fileManager.writeTransaction(sendTransaction)
@@ -144,9 +147,9 @@ class EWalltet():
     def send(self,currency, amount, code):
         crypto = self.getCryptoData(currency)
         if(code == self.user):
-            raise Exception("El codigo del receptor +\""+code+"\" no puede ser igual a tu codigo: "+self.user+".")
+            raise Exception("El codigo del receptor \""+code+"\" no puede ser igual a tu codigo: "+self.user+".")
         sendTransaction = self.buildTransaction(SEND,self.user,crypto, amount, code)
-        receiveTransaction =    self.buildTransaction(RECEIVE, code, crypto, amount, self.user)
+        receiveTransaction =    self.buildTransaction(INCOME, code, crypto, amount, self.user)
         self.fileManager.writeTransaction(receiveTransaction)
         self.fileManager.writeTransaction(sendTransaction)
         print("****TRANSACCIÓN REGISTRADA EXITOSAMENTE.****")
@@ -176,8 +179,7 @@ class EWalltet():
         self.printBalanceOfCurrenciesDetailed(cryptoValuesDict)
 
     def printHeaderOfGBReport(self, reportName):
-        print(printableLen.HEADERLEN)
-        print(self.stringBuilder(printableLen.HEADERLEN,"", "*"))
+        #print(printableLen.HEADERLEN)
         print(self.stringBuilder(printableLen.HEADERLEN,reportName, "*"))
 
         today = date.today()
@@ -185,7 +187,7 @@ class EWalltet():
         header = ""
         header += "Usuario: "+ self.stringBuilder(printableLen.CODE, self.user) +"|"
         header += "Fecha: " + self.stringBuilder(printableLen.DATE, today.strftime("%d/%m/%Y"))+"|"
-        #print(header)
+        print(header)
         print(caracter*printableLen.HEADERLEN)
         header = ""
         header += self.stringBuilder(printableLen.DATE, "Fecha") + "|"
@@ -234,7 +236,7 @@ class EWalltet():
 
 
     def printBalanceOfTransactions(self,transactions, crypto):
-        print(printableLen.HEADERLEN)
+        #print(printableLen.HEADERLEN)
         print(self.stringBuilder(printableLen.HEADERLEN,"BALANCE DE TRANSACCIÓNES", "*"))
         today = date.today()
         caracter = '-'
@@ -267,13 +269,13 @@ class EWalltet():
         strPrinteable = self.stringBuilder(printableLen.DATE, transaction['date']) + "|"
         value = float(transaction['amount'])
         balance = 0.0
-        if(transaction['type'] == SEND):
-            strPrinteable += self.stringBuilder(printableLen.TYPE, "TRANSFERENCIA") + "|"
+        if(transaction['type'] == SEND or transaction['type'] == DEBT):
+            strPrinteable += self.stringBuilder(printableLen.TYPE, "EGRESO") + "|"
             strPrinteable += self.stringBuilder(printableLen.AMOUNT, str(value)) + "|"
             strPrinteable += self.stringBuilder(printableLen.AMOUNT, " ") + "|"
             balance -= value
         else:
-            strPrinteable += self.stringBuilder(printableLen.TYPE, "RECEPCIÓN") + "|"
+            strPrinteable += self.stringBuilder(printableLen.TYPE, "INGRESO") + "|"
             strPrinteable += self.stringBuilder(printableLen.AMOUNT, " ") + "|"
             strPrinteable += self.stringBuilder(printableLen.AMOUNT, str(value)) + "|"
             balance += value
@@ -320,8 +322,12 @@ class EWalltet():
         str += self.stringBuilder(printableLen.SYMBOL, transaction["currency"]) + "|"
         if(transaction["type"] == SEND):
             str += self.stringBuilder(printableLen.TYPE, "TRANSFERENCIA") + "|"
-        else:
+        elif(transaction["type"] == RECEIVE):
             str += self.stringBuilder(printableLen.TYPE, "RECEPCIÓN") + "|"
+        elif(transaction["type"] == INCOME):
+            str += self.stringBuilder(printableLen.TYPE, "INGRESO") + "|"
+        else:
+            str += self.stringBuilder(printableLen.TYPE, "EGRESO") + "|"
         str += self.stringBuilder(printableLen.CODE, transaction["codeToAffect"]) + "|"
         str += self.stringBuilder(printableLen.AMOUNT, transaction["amount"]) + "|"
         print(str)
