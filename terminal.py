@@ -5,19 +5,20 @@ class Terminal:
 
     def __init__(self):
         self.exit = False
+        self.salirSTR = "SALIR"
         self.wallet = EWalltet()
 
     def Login(self):
         print(".....Bienvenido a tu billetera electrónica....")
         while not self.wallet.isUserDefined():
             print("Ingresa un Codigo de Usuario (Solo letras y números).")
-            user = input("O escribe \"exit\" para salir: ")
+            user = input("O escribe \"salir\" para salir: ")
             while not user.isalnum():
                 print("Ingresa un Codigo de Usuario (Solo letras y números).")
-                user = input("O escribe \"exit\" para salir: ")
+                user = input("O escribe \"salir\" para salir: ")
             self.wallet.setUser(user)
             # print("wallet user " + self.wallet.user+ " user "+user)
-            if(user == "exit"):
+            if(user.upper() == self.salirSTR):
                 print("Adios.")
                 self.exit = True
 
@@ -44,11 +45,11 @@ class Terminal:
                 currency = input("Ingresa la moneda que recibiras: ")
                 amount = input("Ingrese la cantidad que recibiras: ")
                 code = input("Ingrese el codigo del remitente: ")
-                #try:
-                self.wallet.receive(currency, amount, code)
-                #except Exception as e:
-                #    print("****Error****")
-                #    print(str(e))
+                try:
+                    self.wallet.receive(currency, amount, code)
+                except Exception as e:
+                    print("\n****Error****")
+                    print("\t"+str(e)+"\n")
             elif (option == "2"):
                 print("Escogiste transferir monto.")
                 currency = input("Ingresa la moneda en que transferiras: ")
@@ -57,22 +58,30 @@ class Terminal:
                 try:
                     self.wallet.send(currency, amount, code)
                 except Exception as e:
-                    print(e)
+                    print("\n****Error****")
+                    print("\t"+str(e)+"\n")
             elif (option == "3"):
                 print("Escogiste mostrar balance de una moneda.")
                 currency = input("Ingresa la moneda :")
-                #try:
-                self.wallet.printBalance(currency)
-                #except Exception as e:
-                #    print(e)
+                try:
+                    self.wallet.printBalance(currency)
+                except Exception as e:
+                    print("\n****Error****")
+                    print("\t"+str(e)+"\n")
             elif (option == "4"):
                 print("Escogiste mostrar balance general.")
-                #try:
-                self.wallet.printGeneralBalance()
-                #except Exception as e:
-                #    print(e)
+                try:
+                    self.wallet.printGeneralBalance()
+                except Exception as e:
+                    print("\n****Error****")
+                    print("\t"+str(e)+"\n")
             elif (option == "5"):
                 print("Escogiste mostrar historico de transacciónes.")
+                try:
+                    self.wallet.printAllTransactions()
+                except Exception as e:
+                    print("\n****Error****")
+                    print("\t"+str(e)+"\n")
             elif (option == "6"):
                 print("Adios.")
                 self.wallet.setUser(None)

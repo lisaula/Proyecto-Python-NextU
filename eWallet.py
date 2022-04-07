@@ -156,14 +156,14 @@ class EWalltet():
         crypto = self.getCryptoData(currency)
         transactions = self.fileManager.getCryptoTransactionsFromUser(self.user, crypto['symbol'])
         if(len(transactions) == 0):
-            print("\tNo tienes ninguna transacción con la divisa: "+crypto['name'])
+            print("\n\tNo tienes ninguna transacción con la divisa: "+crypto['name']+"\n")
         else:
             self.printBalanceOfTransactions(transactions, crypto)
 
     def printGeneralBalance(self):
         curreciesRegisteredInUserList = self.fileManager.getCurrenciesUsedByUser(self.user)
         if(len(curreciesRegisteredInUserList) == 0):
-            print("\tNO TIENES TRANSACCIONES REGISTRADAS")
+            print("\n\t*****NO TIENES TRANSACCIONES REGISTRADAS*****\n")
         else:
             self.printElementsInCurreciesList(curreciesRegisteredInUserList)
 
@@ -285,6 +285,48 @@ class EWalltet():
 
         strPrinteable += self.stringBuilder(printableLen.AMOUNT, str(cryptoValuesDict[transaction['currency']])) + "|"
         print(strPrinteable)
+
+
+    def printAllTransactions(self):
+        transactions = self.fileManager.getCryptoTransactionsFromUser(self.user)
+        if(len(transactions) == 0):
+            print("\n\t******NO TIENES TRANSACCIÓNES REGISTRADAS.******\n")
+        else:
+            self.printHeaderAllTransactions()
+            for transaction in transactions:
+                self.printTransactionsinUserFormat(transaction)
+            caracter = "-"
+            print(caracter*printableLen.HEADERLEN)
+
+    def printHeaderAllTransactions(self):
+        print(self.stringBuilder(printableLen.HEADERLEN,"HISTORIAL DE TRANSACCIÓNES", "*"))
+        today =  date.today()
+        caracter = '-'
+        str = "Usuario: " + self.stringBuilder(printableLen.CODE, self.user) + "|"
+        str += "Fecha: " + self.stringBuilder(printableLen.DATE, today.strftime("%d/%m/%Y"))+"|"
+        print(str)
+        print(caracter*printableLen.HEADERLEN)
+
+        str = self.stringBuilder(printableLen.DATE, "FECHA") + "|"
+        str += self.stringBuilder(printableLen.SYMBOL, "DIVISA") + "|"
+        str += self.stringBuilder(printableLen.TYPE, "TIPO") + "|"
+        str += self.stringBuilder(printableLen.CODE, "CÓDIGO") + "|"
+        str += self.stringBuilder(printableLen.AMOUNT, "MONTO") + "|"
+        print(str)
+        print(caracter*printableLen.HEADERLEN)
+
+    def printTransactionsinUserFormat(self, transaction):
+        str = self.stringBuilder(printableLen.DATE, transaction["date"]) + "|"
+        str += self.stringBuilder(printableLen.SYMBOL, transaction["currency"]) + "|"
+        if(transaction["type"] == SEND):
+            str += self.stringBuilder(printableLen.TYPE, "TRANSFERENCIA") + "|"
+        else:
+            str += self.stringBuilder(printableLen.TYPE, "RECEPCIÓN") + "|"
+        str += self.stringBuilder(printableLen.CODE, transaction["codeToAffect"]) + "|"
+        str += self.stringBuilder(printableLen.AMOUNT, transaction["amount"]) + "|"
+        print(str)
+
+
 
 
     def stringBuilder(self, amount, str, caracter = " ", centerContext = True):

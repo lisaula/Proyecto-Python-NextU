@@ -4,3 +4,11 @@
 {"user": "carlos", "type": "S", "currency": "ETH", "amount": "0.5", "codeToAffect": "luis", "date": "07/04/2022"}
 {"user": "carlos", "type": "R", "currency": "ETH", "amount": "0.1", "codeToAffect": "luis", "date": "07/04/2022"}
 {"user": "luis", "type": "S", "currency": "ETH", "amount": "0.1", "codeToAffect": "carlos", "date": "07/04/2022"}
+{"user": "carlos", "type": "R", "currency": "KK", "amount": "0.3", "codeToAffect": "luis", "date": "07/04/2022"}
+{"user": "luis", "type": "S", "currency": "KK", "amount": "0.3", "codeToAffect": "carlos", "date": "07/04/2022"}
+{"user": "carlos", "type": "R", "currency": "MAMA", "amount": "100", "codeToAffect": "javier", "date": "07/04/2022"}
+{"user": "javier", "type": "S", "currency": "MAMA", "amount": "100", "codeToAffect": "carlos", "date": "07/04/2022"}
+{"user": "luis", "type": "R", "currency": "MAMA", "amount": "50", "codeToAffect": "carlos", "date": "07/04/2022"}
+{"user": "carlos", "type": "S", "currency": "MAMA", "amount": "50", "codeToAffect": "luis", "date": "07/04/2022"}
+{"user": "carlos", "type": "R", "currency": "BTC", "amount": "0.5", "codeToAffect": "luis", "date": "07/04/2022"}
+{"user": "luis", "type": "S", "currency": "BTC", "amount": "0.5", "codeToAffect": "carlos", "date": "07/04/2022"}
